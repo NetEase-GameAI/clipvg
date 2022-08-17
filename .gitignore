@@ -1,0 +1,4 @@
+.idea/
+output/
+__pycache__/
+**/backup/**
