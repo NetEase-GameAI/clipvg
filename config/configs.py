@@ -40,5 +40,6 @@ def parse_args():
                         help='number of patches per ROI.')
     parser.add_argument("--w_roi", type=float, nargs='+', default=30, help='Weight for each ROI.')
     parser.add_argument("--w_patch", type=float, nargs='+', default=80, help='Weight for the patches for each ROI.')
+    parser.add_argument("--exp_name", type=str, default='exp', help='Experiment name.')
 
     return parser.parse_args()
