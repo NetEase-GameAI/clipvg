@@ -24,7 +24,7 @@ python main.py \
 - Shape-only manipulation
 ```bash
 python main.py \
---svg images/athelete.svg \
+--svg images/athlete.svg \
 --prompts "Stephen Curry" \
 --shape_lr 0.4 \
 --color_lr 0.0 \
