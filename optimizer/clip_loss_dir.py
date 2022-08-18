@@ -6,7 +6,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms.functional as VTF
 from typing import Union, List
-# from .antialias import AdaptAntiAlias
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from data.input_norm import get_input_norm
 
@@ -36,7 +35,8 @@ class AdaptCLIP(nn.Module):
             # .e.g., for input range of [-1.0, 1.0], factor = 0.5, bias = 0.5
             x = x * self._factor + self._bias
             # x = VTF.resize(x, size=[self._input_size, self._input_size], interpolation=transforms.InterpolationMode.BICUBIC)
-            x = F.interpolate(x, size=(224, 224), mode='area')
+            # x = F.interpolate(x, size=(224, 224), mode='area')
+            x = F.interpolate(x, size=(224, 224), mode='bicubic')
             # x = VTF.center_crop(x, output_size=self._input_size)
             x = self._normalizer(x)
             features = self._model.encode_image(x)
@@ -57,16 +57,13 @@ class CLIPLossDir(nn.Module):
                  default_input1=None, default_input2=None, default_ref1=None, default_ref2=None, device=None):
         super().__init__()
         self._device = device or torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self._model = nn.DataParallel(AdaptCLIP(model_name=model_name, tensor_range=tensor_range).to(device))
+        self._model = AdaptCLIP(model_name=model_name, tensor_range=tensor_range).to(device)
         with torch.no_grad():
             self._default_feat1 = None if default_input1 is None else self._avg_feat(self._model(self._preprocess(default_input1)))
             self._default_feat2 = None if default_input2 is None else self._avg_feat(self._model(self._preprocess(default_input2)))
-            self._default_ref1_feat = None if default_ref1 is None else self._model(self._preprocess(default_ref1))
-            self._default_ref1_feat = self._default_ref1_feat.mean(axis=0, keepdim=True)
-            self._default_ref1_feat /= self._default_ref1_feat.norm(dim=-1, keepdim=True)
-            self._default_ref2_feat = None if default_ref2 is None else self._model(self._preprocess(default_ref2))
-            self._default_ref2_feat = self._default_ref2_feat.mean(axis=0, keepdim=True)
-            self._default_ref2_feat /= self._default_ref2_feat.norm(dim=-1, keepdim=True)
+            self._default_ref1_feat = None if default_ref1 is None else self._avg_feat(self._model(self._preprocess(default_ref1)))
+            self._default_ref2_feat = None if default_ref2 is None else self._avg_feat(self._model(self._preprocess(default_ref2)))
+        self._eps = 1e-12
 
     @staticmethod
     def _avg_feat(x: torch.Tensor):
@@ -94,10 +91,10 @@ class CLIPLossDir(nn.Module):
         feat1 = self._default_feat1 if x1 is None else self._model(self._preprocess(x1))
         feat2 = self._default_feat2 if x2 is None else self._model(self._preprocess(x2))
         delta1 = feat1 - self._default_ref1_feat
-        delta1 /= delta1.norm(dim=-1, keepdim=True)
-        delta2 = feat2 - self._default_ref1_feat
-        delta2 /= delta2.norm(dim=-1, keepdim=True)
-        similarities = feat1 @ feat2.T
+        delta1 = delta1 / (delta1.norm(dim=-1, keepdim=True) + self._eps)
+        delta2 = feat2 - self._default_ref2_feat
+        delta2 = delta2 / (delta2.norm(dim=-1, keepdim=True) + self._eps)
+        similarities = delta1 @ delta2.T
         # the range of cosine simialrity is [-1, 1].
         # the range of clip_loss is [0, 2]
         clip_loss = 1.0 - torch.mean(similarities)

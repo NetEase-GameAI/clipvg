@@ -5,7 +5,7 @@ from optimizer.clip_loss_dir import CLIPLossDir
 from data.text_template import compose_text_with_templates
 
 
-class ROI():
+class ROI:
     def __init__(self, init_img: torch.Tensor, prompt: str, area: List[int], n_patches: int = 64, crop_ratio: float = 0.8,
                  w_roi: float = 30, w_patch: float = 80):
         self._n_patches = n_patches
@@ -17,17 +17,19 @@ class ROI():
         self._y = y
         self._w = w
         self._h = h
-        patch_size = int(max(h, w) * crop_ratio)
+        patch_size = round(max(h, w) * crop_ratio)
         self._cropper_patch = transforms.RandomCrop(patch_size, pad_if_needed=True, fill=1.0, padding_mode='constant')
         # self._cropper_roi = transforms.RandomCrop(max(h, w), pad_if_needed=True, fill=1.0, padding_mode='constant')
         self._cropper_roi = transforms.CenterCrop(max(h, w))  # TODO: use white padding instead.
+        # Apply a 0.98 random cropping for the whole roi, otherwise the direction of image may be exactly 0.
+        self._cropper_roi_random = transforms.RandomCrop(int(max(h, w) * 0.98))
         self._process = transforms.Compose([
             transforms.RandomPerspective(fill=1.0, p=1.0, distortion_scale=0.3),
             transforms.RandomHorizontalFlip(p=0.3),
         ])
         init_img_roi = self._get_roi(init_img)
         self._clip_loss_func = CLIPLossDir(default_ref1=self._cropper_roi(init_img_roi),
-                                           default_ref2=compose_text_with_templates('photo'),
+                                           default_ref2=compose_text_with_templates('A photo'),
                                            default_input2=compose_text_with_templates(prompt))
 
     def _get_roi(self, x: torch.Tensor):
@@ -39,6 +41,7 @@ class ROI():
         total_loss = 0.0
         if self._w_roi > 0.0:
             x_roi = self._cropper_roi(x_roi_raw)
+            x_roi = self._cropper_roi_random(x_roi)
             # x_roi = self._process(x_roi)
             roi_loss = self._clip_loss_func(x1=x_roi)
             total_loss += self._w_roi * roi_loss
@@ -50,7 +53,7 @@ class ROI():
                 patches.append(patch)
 
             patches = torch.cat(patches, dim=0)
-            patch_loss = self._w_patch * self._clip_loss_func(x1=patches)
+            patch_loss = self._clip_loss_func(x1=patches)
             total_loss += self._w_patch * patch_loss
         return total_loss
 

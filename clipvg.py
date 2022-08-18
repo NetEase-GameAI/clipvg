@@ -1,14 +1,11 @@
 import os
 import time
 import pydiffvg
-import argparse
-import ttools.modules
 import torch
-import skimage.io
 from roi import ROI
 
 
-class CLIPVG():
+class CLIPVG:
     def __init__(self, args):
         self._rois = []
         self._svg = args.svg
