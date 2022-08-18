@@ -7,22 +7,39 @@
 - Default Setting
 ```bash
 python main.py \
---svg images/peter10-30.svg
---prompts "Joker, Heath Ledger"
+--svg images/pitt.svg \
+--prompts "Joker, Heath Ledger" \
+--exp_name default
 ```
 
 - ROI Prompts
 ```bash
 python main.py \
---svg images/qima4.svg \
+--svg images/horseriding.svg \
 --prompts "Astronaut riding a metal horse" "Astronaut" "A metal horse" \
---extra_rois 185 84 185 316 20 175 480 325
+--extra_rois 185 84 185 316 20 175 480 325 \
+--exp_name roi_prompts
 ```
 
-- Shape-only 
+- Shape-only manipulation
 ```bash
+python main.py \
+--svg images/athelete.svg \
+--prompts "Stephen Curry" \
+--shape_lr 0.4 \
+--color_lr 0.0 \
+--exp_name reshape
+```
 
+- Color-only manipulation
+```bash
+python main.py \
+--svg images/tajmahal.svg \
+--prompts "Taj Mahal under the moon light" \
+--shape_lr 0.0 \
+--color_lr 0.02 \
+--exp_name recolor
 ```
 
 ## Results
-- Find the results in ``./output/<imaage_name>/<prompt>``
+- Find the results in ``./output/<image_name>/<prompt>_<exp_name>``
