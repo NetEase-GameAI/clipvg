@@ -43,3 +43,6 @@ python main.py \
 
 ## Results
 - Find the results in ``./output/<image_name>/<prompt>_<exp_name>``
+
+## Configs
+- Check the configs in ./config/configs.py
