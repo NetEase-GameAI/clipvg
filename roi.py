@@ -12,11 +12,11 @@ class ROI():
         # self.crop_ratio = crop_ratio
         self._w_roi = w_roi
         self._w_patch = w_patch
-        x, y, h, w = area
+        x, y, w, h = area
         self._x = x
         self._y = y
-        self._h = h
         self._w = w
+        self._h = h
         patch_size = int(max(h, w) * crop_ratio)
         self._cropper_patch = transforms.RandomCrop(patch_size, pad_if_needed=True, fill=1.0, padding_mode='constant')
         # self._cropper_roi = transforms.RandomCrop(max(h, w), pad_if_needed=True, fill=1.0, padding_mode='constant')

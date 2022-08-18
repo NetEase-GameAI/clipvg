@@ -59,14 +59,21 @@ class CLIPLossDir(nn.Module):
         self._device = device or torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self._model = nn.DataParallel(AdaptCLIP(model_name=model_name, tensor_range=tensor_range).to(device))
         with torch.no_grad():
-            self._default_feat1 = None if default_input1 is None else self._model(self._preprocess(default_input1))
-            self._default_feat2 = None if default_input2 is None else self._model(self._preprocess(default_input2))
+            self._default_feat1 = None if default_input1 is None else self._avg_feat(self._model(self._preprocess(default_input1)))
+            self._default_feat2 = None if default_input2 is None else self._avg_feat(self._model(self._preprocess(default_input2)))
             self._default_ref1_feat = None if default_ref1 is None else self._model(self._preprocess(default_ref1))
             self._default_ref1_feat = self._default_ref1_feat.mean(axis=0, keepdim=True)
             self._default_ref1_feat /= self._default_ref1_feat.norm(dim=-1, keepdim=True)
             self._default_ref2_feat = None if default_ref2 is None else self._model(self._preprocess(default_ref2))
             self._default_ref2_feat = self._default_ref2_feat.mean(axis=0, keepdim=True)
             self._default_ref2_feat /= self._default_ref2_feat.norm(dim=-1, keepdim=True)
+
+    @staticmethod
+    def _avg_feat(x: torch.Tensor):
+        assert len(x.shape) == 2
+        x = x.mean(axis=0, keepdim=True)
+        x /= x.norm(dim=-1, keepdim=True)
+        return x
 
     def _preprocess(self, x: Union[None, torch.Tensor, List[str]]):
         # Only the preprocess of text (tokenize) is done here.
