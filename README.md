@@ -2,6 +2,12 @@
 - CUDA 11.3
 - Python 3.6
 - ``pip install -r requirements.txt``
+- Install diffvg:
+```bash
+git clone git@github.com:BachiLi/diffvg.git --recursive
+cd diffvg
+python setup.py build
+```
 
 ## CLIPVG Optimization
 - Default Setting
@@ -46,3 +52,6 @@ python main.py \
 
 ## Configs
 - Check the configs in ./config/configs.py
+
+## Acknowledgement
+- Our code is based on [diffvg](https://github.com/BachiLi/diffvg) and [CLIP](https://github.com/openai/CLIP)
