@@ -59,17 +59,19 @@ class CLIPLossDir(nn.Module):
         self._device = device or torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self._model = AdaptCLIP(model_name=model_name, tensor_range=tensor_range).to(device)
         with torch.no_grad():
-            self._default_feat1 = None if default_input1 is None else self._avg_feat(self._model(self._preprocess(default_input1)))
-            self._default_feat2 = None if default_input2 is None else self._avg_feat(self._model(self._preprocess(default_input2)))
-            self._default_ref1_feat = None if default_ref1 is None else self._avg_feat(self._model(self._preprocess(default_ref1)))
-            self._default_ref2_feat = None if default_ref2 is None else self._avg_feat(self._model(self._preprocess(default_ref2)))
+            self._default_feat1 = None if default_input1 is None else self._norm_feat(self._model(self._preprocess(default_input1)), norm=True)
+            self._default_feat2 = None if default_input2 is None else self._norm_feat(self._model(self._preprocess(default_input2)), norm=True)
+            self._default_ref1_feat = None if default_ref1 is None else self._norm_feat(self._model(self._preprocess(default_ref1)))
+            self._default_ref2_feat = None if default_ref2 is None else self._norm_feat(self._model(self._preprocess(default_ref2)))
         self._eps = 1e-12
 
     @staticmethod
-    def _avg_feat(x: torch.Tensor):
+    def _norm_feat(x: torch.Tensor, reduce_batch: bool = True, norm: bool = True):
         assert len(x.shape) == 2
-        x = x.mean(axis=0, keepdim=True)
-        x /= x.norm(dim=-1, keepdim=True)
+        if reduce_batch:
+            x = x.mean(axis=0, keepdim=True)
+        if norm:
+            x = x / x.norm(dim=-1, keepdim=True)
         return x
 
     def _preprocess(self, x: Union[None, torch.Tensor, List[str]]):
@@ -88,13 +90,16 @@ class CLIPLossDir(nn.Module):
     def forward(self,
                 x1: Union[None, torch.Tensor, List[str]] = None,
                 x2: Union[None, torch.Tensor, List[str]] = None):
-        feat1 = self._default_feat1 if x1 is None else self._model(self._preprocess(x1))
-        feat2 = self._default_feat2 if x2 is None else self._model(self._preprocess(x2))
+        feat1 = self._default_feat1 if x1 is None \
+            else self._norm_feat(self._model(self._preprocess(x1)), reduce_batch=False, norm=True)
+        feat2 = self._default_feat2 if x2 is None \
+            else self._norm_feat(self._model(self._preprocess(x2)), reduce_batch=False, norm=True)
         delta1 = feat1 - self._default_ref1_feat
-        delta1 = delta1 / (delta1.norm(dim=-1, keepdim=True) + self._eps)
+        # delta1 = delta1 / (delta1.norm(dim=-1, keepdim=True) + self._eps)
         delta2 = feat2 - self._default_ref2_feat
-        delta2 = delta2 / (delta2.norm(dim=-1, keepdim=True) + self._eps)
-        similarities = delta1 @ delta2.T
+        # delta2 = delta2 / (delta2.norm(dim=-1, keepdim=True) + self._eps)
+        # similarities = delta1 @ delta2.T
+        similarities = torch.cosine_similarity(delta1, delta2, dim=-1)
         # the range of cosine simialrity is [-1, 1].
         # the range of clip_loss is [0, 2]
         clip_loss = 1.0 - torch.mean(similarities)

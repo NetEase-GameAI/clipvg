@@ -3,7 +3,7 @@ import time
 import pydiffvg
 import torch
 from roi import ROI
-
+# from data.get_content_image import get_content_image
 
 class CLIPVG:
     def __init__(self, args):
@@ -46,7 +46,8 @@ class CLIPVG:
         self._points_vars = points_vars
         self._color_vars = color_vars
 
-        self._init_img = self._render_torch()
+        self._init_img = self._render_torch().detach()
+        # self._init_img = get_content_image().to(self._device)
         # The output image is in linear RGB space. Do Gamma correction before saving the image.
         # pydiffvg.imwrite(img.cpu(), 'results/refine_svg/init.png', gamma=1.0)
 
