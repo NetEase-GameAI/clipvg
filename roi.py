@@ -18,14 +18,15 @@ class ROI:
         self._w = w
         self._h = h
         patch_size = round(max(h, w) * crop_ratio)
-        self._cropper_patch = transforms.RandomCrop(patch_size, pad_if_needed=True, fill=1.0, padding_mode='constant')
+        padding_size = round(0.2 * patch_size)
+        self._cropper_patch = transforms.RandomCrop(patch_size, padding=padding_size, pad_if_needed=True, fill=1.0, padding_mode='constant')
         # self._cropper_roi = transforms.RandomCrop(max(h, w), pad_if_needed=True, fill=1.0, padding_mode='constant')
         self._cropper_roi = transforms.CenterCrop(max(h, w))  # TODO: use white padding instead.
         # Apply a 0.98 random cropping for the whole roi, otherwise the direction of image may be exactly 0.
         self._cropper_roi_random = transforms.RandomCrop(int(max(h, w) * 0.98))
         self._process = transforms.Compose([
             transforms.RandomPerspective(fill=1.0, p=1.0, distortion_scale=0.3),
-            transforms.RandomHorizontalFlip(p=0.3),
+            # transforms.RandomHorizontalFlip(p=0.3),
         ])
         init_img_roi = self._get_roi(init_img)
         self._clip_loss_func = CLIPLossDir(default_ref1=self._cropper_roi(init_img_roi),

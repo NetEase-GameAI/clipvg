@@ -59,8 +59,8 @@ class CLIPLossDir(nn.Module):
         self._device = device or torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self._model = AdaptCLIP(model_name=model_name, tensor_range=tensor_range).to(device)
         with torch.no_grad():
-            self._default_feat1 = None if default_input1 is None else self._norm_feat(self._model(self._preprocess(default_input1)), norm=True)
-            self._default_feat2 = None if default_input2 is None else self._norm_feat(self._model(self._preprocess(default_input2)), norm=True)
+            self._default_feat1 = None if default_input1 is None else self._norm_feat(self._model(self._preprocess(default_input1)))
+            self._default_feat2 = None if default_input2 is None else self._norm_feat(self._model(self._preprocess(default_input2)))
             self._default_ref1_feat = None if default_ref1 is None else self._norm_feat(self._model(self._preprocess(default_ref1)))
             self._default_ref2_feat = None if default_ref2 is None else self._norm_feat(self._model(self._preprocess(default_ref2)))
         self._eps = 1e-12
@@ -91,9 +91,9 @@ class CLIPLossDir(nn.Module):
                 x1: Union[None, torch.Tensor, List[str]] = None,
                 x2: Union[None, torch.Tensor, List[str]] = None):
         feat1 = self._default_feat1 if x1 is None \
-            else self._norm_feat(self._model(self._preprocess(x1)), reduce_batch=False, norm=True)
+            else self._norm_feat(self._model(self._preprocess(x1)), reduce_batch=False)
         feat2 = self._default_feat2 if x2 is None \
-            else self._norm_feat(self._model(self._preprocess(x2)), reduce_batch=False, norm=True)
+            else self._norm_feat(self._model(self._preprocess(x2)), reduce_batch=False)
         delta1 = feat1 - self._default_ref1_feat
         # delta1 = delta1 / (delta1.norm(dim=-1, keepdim=True) + self._eps)
         delta2 = feat2 - self._default_ref2_feat
