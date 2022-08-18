@@ -48,7 +48,7 @@ class AdaptCLIP(nn.Module):
         # Inplace division will cause an error.
         # "one of the variables needed for gradient computation has been modified by an inplace operation"
         # features /= features.norm(dim=-1, keepdim=True)
-        features = features / features.norm(dim=-1, keepdim=True)
+        # features = features / features.norm(dim=-1, keepdim=True)
         return features
 
 
