@@ -36,7 +36,7 @@ class AdaptCLIP(nn.Module):
             x = x * self._factor + self._bias
             # x = VTF.resize(x, size=[self._input_size, self._input_size], interpolation=transforms.InterpolationMode.BICUBIC)
             # x = F.interpolate(x, size=(224, 224), mode='area')
-            x = F.interpolate(x, size=(224, 224), mode='bicubic')
+            x = F.interpolate(x, size=(self._input_size, self._input_size), mode='bicubic')
             # x = VTF.center_crop(x, output_size=self._input_size)
             x = self._normalizer(x)
             features = self._model.encode_image(x)
