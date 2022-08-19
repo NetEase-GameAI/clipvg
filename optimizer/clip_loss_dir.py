@@ -57,7 +57,7 @@ class CLIPLossDir(nn.Module):
                  default_input1=None, default_input2=None, default_ref1=None, default_ref2=None, device=None):
         super().__init__()
         self._device = device or torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self._model = AdaptCLIP(model_name=model_name, tensor_range=tensor_range).to(device)
+        self._model = AdaptCLIP(model_name=model_name, tensor_range=tensor_range).to(self._device)
         with torch.no_grad():
             self._default_feat1 = None if default_input1 is None else self._norm_feat(self._model(self._preprocess(default_input1)))
             self._default_feat2 = None if default_input2 is None else self._norm_feat(self._model(self._preprocess(default_input2)))
