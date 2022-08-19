@@ -10,7 +10,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from data.input_norm import get_input_norm
 
 # ViTB32_PATH = os.path.join(os.path.dirname(__file__), '..', 'assets', 'models', 'ViT-B-32.pt')
-torch.autograd.set_detect_anomaly(True)
+# torch.autograd.set_detect_anomaly(True)
 
 
 class AdaptCLIP(nn.Module):
