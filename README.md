@@ -19,7 +19,7 @@ python main.py \
 
 - ROI Prompts
 ```bash
-# The first prompt is always defined for the whole image, followed the extra ROI prompts.
+# The first prompt is always defined for the whole image, followed by the extra ROI prompts.
 # The extra ROIs are defined by x1, y1, w1, h1, x2, y2, w2, h2, ...
 python main.py \
 --svg images/horseriding.svg \
