@@ -44,5 +44,9 @@ def parse_args():
     parser.add_argument("--output_dir", type=str, default=os.path.join(ROOT_DIR, 'output'),
                         help='Output directory.')
     parser.add_argument('--img_save_freq', type=int, default=10, help='Image saving frequency in iteration.')
+    parser.add_argument('--add_bg_layer', type=_str2bool, default=False,
+                        help='Add an optimizable vector graphical element as the background.')
+    parser.add_argument('--bg_layer_rgba', type=float, nargs='+', default=[0.5, 0.5, 0.5, 1.0],
+                        help='Initial RGBA of the background element. Value range: [0.0, 1.0].')
 
     return parser.parse_args()
