@@ -34,6 +34,9 @@ class CLIPVG:
         self._shapes = shapes
         self._shape_groups = shape_groups
 
+        if args.add_bg_layer:
+            self._add_bg_layer(args)
+
         points_vars = []
         for path in self._shapes:
             path.points.requires_grad = True
@@ -99,6 +102,44 @@ class CLIPVG:
     def _save_svg(self, name: str):
         pydiffvg.save_svg(os.path.join(self._output_dir, name),
                           self._canvas_width, self._canvas_height, self._shapes, self._shape_groups)
+
+    def _add_bg_layer(self, args):
+        num_segments = 4
+        points = []
+        points.append((0.01, 0.01))
+        points.append((0.01, 0.33))
+        points.append((0.01, 0.66))
+        points.append((0.01, 0.99))
+        points.append((0.33, 0.99))
+        points.append((0.66, 0.99))
+        points.append((0.99, 0.99))
+        points.append((0.99, 0.66))
+        points.append((0.99, 0.33))
+        points.append((0.99, 0.01))
+        points.append((0.66, 0.01))
+        points.append((0.33, 0.01))
+        points = torch.tensor(points)
+        points[:, 0] *= self._canvas_width
+        points[:, 1] *= self._canvas_height
+        num_control_points = torch.zeros(num_segments, dtype=torch.int32) + 2
+        path = pydiffvg.Path(num_control_points=num_control_points,
+                             points=points,
+                             stroke_width=torch.tensor(1.0),
+                             is_closed=True)
+
+        # Insert the bg element at the beginning as the bottom layer
+        self._shapes.insert(0, path)
+
+        # Increase the shape_id of other elements by 1
+        for sg in self._shape_groups:
+            shape_ids = sg.shape_ids
+            sg.shape_ids = shape_ids + 1
+
+        # Add a shape group for the bg element
+        assert len(args.bg_layer_rgba) == 4
+        path_group = pydiffvg.ShapeGroup(shape_ids=torch.tensor([0]),
+                                         fill_color=torch.tensor(args.bg_layer_rgba))
+        self._shape_groups.insert(0, path_group)
 
     def run(self):
         # self._save_raster(self._init_img, 'init.png')
